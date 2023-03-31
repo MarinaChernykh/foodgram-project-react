@@ -132,3 +132,4 @@ docker-compose exec backend python manage.py load_ingredients
 http://foodgram-recipes.hopto.org/api/docs/ - для удаленного сервера
 http://localhost/api/docs/ - для локального компьютера
 ```
+
