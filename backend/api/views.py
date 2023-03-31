@@ -34,12 +34,12 @@ class CustomUserViewSet(UserViewSet):
 
     def get_permissions(self):
         """Выбор прав доступа для операции."""
-        if self.action in [
+        if self.action in (
             'me', 'retrieve', 'set_password',
             'subscriptions', 'subscribe'
-        ]:
+        ):
             return (IsAuthenticated(),)
-        if self.action in ['list', 'create']:
+        if self.action in ('list', 'create'):
             return (AllowAny(),)
         if self.action == 'destroy':
             return (IsAdminOrReadOnly(),)
@@ -70,16 +70,24 @@ class CustomUserViewSet(UserViewSet):
         author = get_object_or_404(User, id=id)
         user = self.request.user
         if request.method == "POST":
-            if author == user:
-                raise serializers.ValidationError(
-                    'Нельзя подписываться на самого себя!')
-            if user.subscribed.filter(author=author).exists():
-                raise serializers.ValidationError(
-                    'Вы уже подписаны на этого автора')
-            Subscription.objects.create(user=user, author=author)
-            serializer = SubscriptionSerializer(
-                author, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return self.create_subscription(user, author, request)
+        return self.delete_subscription(user, author)
+
+    def create_subscription(self, user, author, request):
+        """Добавление автора в избранное."""
+        if author == user:
+            raise serializers.ValidationError(
+                'Нельзя подписываться на самого себя!')
+        if user.subscribed.filter(author=author).exists():
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого автора')
+        Subscription.objects.create(user=user, author=author)
+        serializer = SubscriptionSerializer(
+            author, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete_subscription(self, user, author):
+        """Удаление автора из избранного."""
         subscription = user.subscribed.filter(author=author)
         if subscription:
             subscription.delete()
@@ -121,8 +129,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """Выбор прав доступа для операции."""
-        if self.action in ['favorite', 'shopping_cart',
-                           'download_shopping_cart']:
+        if self.action in ('favorite', 'shopping_cart',
+                           'download_shopping_cart'):
             return (IsAuthenticated(),)
         return (IsAuthorOrAdminOrReadOnly(),)
 

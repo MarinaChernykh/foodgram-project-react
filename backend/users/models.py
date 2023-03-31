@@ -70,7 +70,11 @@ class Subscription(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'author'],
                 name='unique_subscription'
-            )
+            ),
+            models.CheckConstraint(
+                check=~models.Q(author=models.F('user')),
+                name="user_is_not_author",
+            ),
         ]
 
     def __str__(self):
